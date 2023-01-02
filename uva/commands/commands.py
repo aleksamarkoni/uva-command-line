@@ -2,7 +2,7 @@ import pickle
 import requests
 from bs4 import BeautifulSoup
 
-import localdb
+import uva.localdb as localdb
 
 BASE_URL = 'https://onlinejudge.org/index.php'
 
