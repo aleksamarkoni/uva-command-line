@@ -1,6 +1,7 @@
 import pickle
 import requests
 from bs4 import BeautifulSoup
+from rich.console import Console
 
 import uva.localdb as localdb
 
@@ -26,42 +27,53 @@ SUBMISSION_SUCESS_MESSAGE = 'mosmsg=Submission+received+with+ID+'
 
 
 def login(username, password):
-    session = requests.Session()
-    r = session.get(BASE_URL)
-    soup = BeautifulSoup(r.content, 'html5lib')
-    form = soup.find('form', id='mod_loginform')
-    inputs = form.find_all('input', type='hidden')
+    console = Console()
+    with console.status("[blue]Logging into uva") as status:
+        console.log("Fetching the login form")
+        session = requests.Session()
+        r = session.get(BASE_URL)
+        console.log("Filling out the form")
+        soup = BeautifulSoup(r.content, 'html5lib')
+        form = soup.find('form', id='mod_loginform')
+        inputs = form.find_all('input', type='hidden')
 
-    form_data = {
-        'username': username,
-        'passwd': password,
-        'remember': 'yes'
-    }
-    for tag in inputs:
-        form_data[tag['name']] = tag['value']
+        form_data = {
+            'username': username,
+            'passwd': password,
+            'remember': 'yes'
+        }
+        for tag in inputs:
+            form_data[tag['name']] = tag['value']
 
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
 
-    # TODO add error checks on this call
-    response = session.post(BASE_URL, params=LOGIN_PARAMS, headers=headers, data=form_data)
+        console.log("Submitting the form")
+        # TODO add error checks on this call
+        response = session.post(BASE_URL, params=LOGIN_PARAMS, headers=headers, data=form_data)
 
-    res = response.content.decode("utf-8")
+        res = response.content.decode("utf-8")
 
-    if NOT_AUTHORIEZED_ERROR_STRING in res:
-        print('You are not authorize')
-    elif 'My Account' in res and 'Logout' in res:
-        print('You are logged in')
-    else:
-        print('There was an error')
+        if NOT_AUTHORIEZED_ERROR_STRING in res:
+            console.log('You are not authorize')
+            return
+        elif 'My Account' in res and 'Logout' in res:
+            console.log('You are logged in')
+        else:
+            console.log('There was an error')
+            return
 
-    localdb.save_cookies(pickle.dumps(session.cookies))
+        console.log("Saving login token to the local db")
+        localdb.save_cookies(pickle.dumps(session.cookies))
 
-    # TODO add error checking on this call
-    p = requests.get(UHUNT_UNAME2UID_API_URL + '/' + username)
+        console.log("Getting uva hunt username")
+        # TODO add error checking on this call
+        p = requests.get(UHUNT_UNAME2UID_API_URL + '/' + username)
 
-    localdb.save_login_data(username, p.content.decode("utf-8"))
+        console.log("Saving uva hunt username to local db")
+        localdb.save_login_data(username, p.content.decode("utf-8"))
+        console.log("All done")
 
 
 def get_latest_subs(count):
