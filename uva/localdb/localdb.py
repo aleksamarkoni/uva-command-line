@@ -22,8 +22,11 @@ def get_database():
 
 def read_cookies():
     db = get_database()
-    cookies = db.get(DB_KEY_COOKIE)
-    return base64.b64decode(cookies)
+    if db.exists(DB_KEY_COOKIE):
+        cookies = db.get(DB_KEY_COOKIE)
+        return base64.b64decode(cookies)
+    else:
+        return None
 
 
 def save_cookies(data):
@@ -46,9 +49,9 @@ def read_uhunt_uid():
 
 
 def purge():
-    app_dir = typer.get_app_dir(APP_NAME)
-    path: Path = Path(app_dir) / CONFIG_FILE_NAME
-    os.remove(os.path.dirname(path))
-    # db = get_database()
-    # db.deldb()
-    # db.dump()
+    # app_dir = typer.get_app_dir(APP_NAME)
+    # path: Path = Path(app_dir) / CONFIG_FILE_NAME
+    # os.remove(os.path.dirname(path))
+    db = get_database()
+    db.deldb()
+    db.dump()

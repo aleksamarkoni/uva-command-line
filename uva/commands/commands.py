@@ -1,7 +1,14 @@
 import pickle
+import time
+
 import requests
 from bs4 import BeautifulSoup
+from rich import box
 from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+import datetime
+import timeago
 
 import uva.localdb as localdb
 
@@ -20,14 +27,17 @@ SUBMIT_PARAMS = {
 
 UHUNT_BASE_API_URL = 'https://uhunt.onlinejudge.org/api'
 UHUNT_UNAME2UID_API_URL = UHUNT_BASE_API_URL + '/uname2uid'
+UHUNT_SUBS_USER_API_URL = UHUNT_BASE_API_URL + '/subs-user'
 UHUNT_SUBS_USER_LATEST_API_URL = UHUNT_BASE_API_URL + '/subs-user-last'
 
 NOT_AUTHORIEZED_ERROR_STRING = 'You are not authorised to view this resource'
 SUBMISSION_SUCESS_MESSAGE = 'mosmsg=Submission+received+with+ID+'
 
+NOT_LOGGED_IN_MESSAGE = "It's seems that you are not logged in, please login first."
+
 
 def login(username, password):
-    console = Console()
+    console = Console(log_time=False)
     with console.status("[blue]Logging into uva") as status:
         console.log("Fetching the login form")
         session = requests.Session()
@@ -73,44 +83,106 @@ def login(username, password):
 
         console.log("Saving uva hunt username to local db")
         localdb.save_login_data(username, p.content.decode("utf-8"))
-        console.log("All done")
+        console.log("[bold green]All done")
 
 
 def get_latest_subs(count):
+    console = Console(log_time=False)
+    console.status("[blue]Logging into uva")
+    cookie = localdb.read_cookies()
+    if cookie is None:
+        console.log(NOT_LOGGED_IN_MESSAGE)
+        return
     uhunt_uid = localdb.read_uhunt_uid()
     url = f'{UHUNT_SUBS_USER_LATEST_API_URL}/{uhunt_uid}/{count}'
-    # TODO add error checks for this call
     submissions = requests.get(url)
     return submissions.content.decode("utf-8")
 
 
 def logout():
-    localdb.purge()
+    console = Console(log_time=False)
+    with console.status("[blue]Logging out from uva") as status:
+        localdb.purge()
+        console.log("[bold green]All done")
 
 
 def submit(problem_id, filepath, language):
-    cookies = localdb.read_cookies()
+    console = Console(log_time=False)
+    console.status("[blue]Submitting your solution")
+    cookie = localdb.read_cookies()
+    if cookie is None:
+        console.log(NOT_LOGGED_IN_MESSAGE)
+        return
     session = requests.session()
-    session.cookies.update(pickle.loads(cookies))
+    session.cookies.update(pickle.loads(cookie))
 
     files = {
         'localid': (None, problem_id),
         'language': (None, language),
         'codeupl': (filepath, open(filepath, 'rb')),
     }
-
+    console.log("Uploading solution to Uva")
     response = session.post(BASE_URL, params=SUBMIT_PARAMS, files=files)
     res = response.content.decode("utf-8")
 
     if NOT_AUTHORIEZED_ERROR_STRING in res:
-        print('You are not authorize')
+        console.log(NOT_AUTHORIEZED_ERROR_STRING)
     elif SUBMISSION_SUCESS_MESSAGE in res:
         index = res.find(SUBMISSION_SUCESS_MESSAGE)
         end = res.find('"', index)
         submission_id = res[index + len(SUBMISSION_SUCESS_MESSAGE):end]
-        print(submission_id)
-        #TODO call this endpoint to fetch the submission status and see if everything is good
-        #https://uhunt.onlinejudge.org/api/subs-user/88772/28133692
-
+        console.log(f"Submission with submission id {submission_id} submitted")
+        wait_for_submission_results(submission_id, console)
     else:
-        print('There was an error')
+        console.log('There was an error')
+
+
+def wait_for_submission_results(submission_id, console):
+    console.log("Waiting for results")
+    uhunt_uid = localdb.read_uhunt_uid()
+    sub_id = str(int(submission_id) - 1)
+    verdict_dict = {
+        0: "Processing",
+        10: "Submission error",
+        15: "Can't be judged",
+        20: "In queue",
+        30: "Compile error",
+        35: "Restricted function",
+        40: "Runtime error",
+        45: "Output limit",
+        50: "Time limit",
+        60: "Memory limit",
+        70: "Wrong answer",
+        80: "PresentationE",
+        90: "Accepted"
+    }
+
+    language_dict = {
+        1: "ANSI C",
+        2: "Java",
+        3: "C++",
+        4: "Pascal",
+        5: "C++11"
+    }
+
+    with Live(console=console, auto_refresh=False) as live:
+        while True:
+            table = Table(
+                "Submission ID", "Problem ID", "Verdict ID", "Runtime", "Submission Time", "Language",
+                "Rank", box=box.SIMPLE
+            )
+            res = requests.get(f"{UHUNT_SUBS_USER_API_URL}/{uhunt_uid}/{sub_id}")
+            s = res.json()["subs"][0]
+
+            submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]))
+            table.add_row(
+                str(s[0]),
+                str(s[1]),
+                verdict_dict[s[2]],
+                str(s[3]),
+                submission_time,
+                language_dict[s[5]],
+                str(s[6])
+            )
+            live.update(table, refresh=True)
+            time.sleep(3)
