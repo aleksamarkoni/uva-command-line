@@ -12,7 +12,8 @@ import timeago
 
 import uva.localdb as localdb
 
-BASE_URL = 'https://onlinejudge.org/index.php'
+BASE_URL = 'https://onlinejudge.org'
+PDF_FILE_URL = BASE_URL + '/external'
 
 LOGIN_PARAMS = {
     'option': 'com_comprofiler',
@@ -186,3 +187,12 @@ def wait_for_submission_results(submission_id, console):
             )
             live.update(table, refresh=True)
             time.sleep(3)
+
+
+def get_pdf_file(problem_id):
+    url = f"{PDF_FILE_URL}/{problem_id[0:3]}/{problem_id}.pdf"
+    print(url)
+    res = requests.get(url)
+    with open(f'{problem_id}.pdf', 'wb') as f:
+        f.write(res.content)
+

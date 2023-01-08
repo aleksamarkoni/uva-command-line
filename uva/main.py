@@ -56,8 +56,8 @@ def submit(problem_id: int, filepath: str, language: int):
 
 
 @app.command()
-def sub():
-    commands.wait_for_submission_results("28133745", Console())
+def pdf(problem_id: int):
+    commands.get_pdf_file(str(problem_id))
 
 
 if __name__ == "__main__":
