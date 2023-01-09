@@ -163,7 +163,8 @@ def wait_for_submission_results(submission_id, console):
         2: "Java",
         3: "C++",
         4: "Pascal",
-        5: "C++11"
+        5: "C++11",
+        6: "Python"
     }
 
     with Live(console=console, auto_refresh=False) as live:
