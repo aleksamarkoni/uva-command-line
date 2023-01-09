@@ -38,7 +38,7 @@ NOT_LOGGED_IN_MESSAGE = "It's seems that you are not logged in, please login fir
 
 
 def login(username, password):
-    console = Console(log_time=False)
+    console = Console(log_time=False, log_path=False)
     with console.status("[blue]Logging into uva") as status:
         console.log("Fetching the login form")
         session = requests.Session()
@@ -88,7 +88,7 @@ def login(username, password):
 
 
 def get_latest_subs(count):
-    console = Console(log_time=False)
+    console = Console(log_time=False, log_path=False)
     console.status("[blue]Logging into uva")
     cookie = localdb.read_cookies()
     if cookie is None:
@@ -101,14 +101,14 @@ def get_latest_subs(count):
 
 
 def logout():
-    console = Console(log_time=False)
+    console = Console(log_time=False, log_path=False)
     with console.status("[blue]Logging out from uva") as status:
         localdb.purge()
         console.log("[bold green]All done")
 
 
 def submit(problem_id, filepath, language):
-    console = Console(log_time=False)
+    console = Console(log_time=False, log_path=False)
     console.status("[blue]Submitting your solution")
     cookie = localdb.read_cookies()
     if cookie is None:
@@ -174,6 +174,9 @@ def wait_for_submission_results(submission_id, console):
                 "Rank", box=box.SIMPLE
             )
             res = requests.get(f"{UHUNT_SUBS_USER_API_URL}/{uhunt_uid}/{sub_id}")
+            print(res.json())
+            if len(res.json()["subs"]) == 0:
+                continue
             s = res.json()["subs"][0]
 
             submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]))
