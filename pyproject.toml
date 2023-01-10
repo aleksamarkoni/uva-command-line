@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "uva"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 authors = ["Aleksandar Markovic <aleksamarkoni@gmail.com>"]
 readme = "README.md"
