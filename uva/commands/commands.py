@@ -11,6 +11,7 @@ import datetime
 import timeago
 
 import uva.localdb as localdb
+import uva.helpers as helpers
 
 BASE_URL = 'https://onlinejudge.org'
 PDF_FILE_URL = BASE_URL + '/external'
@@ -139,58 +140,40 @@ def submit(problem_id, filepath, language):
 
 
 def wait_for_submission_results(submission_id, console):
-    console.log("Waiting for results")
+    console.log("[bold green]Waiting for results, to exit ctrl + z")
     uhunt_uid = localdb.read_uhunt_uid()
     sub_id = str(int(submission_id) - 1)
-    verdict_dict = {
-        0: "Processing",
-        10: "Submission error",
-        15: "Can't be judged",
-        20: "In queue",
-        30: "Compile error",
-        35: "Restricted function",
-        40: "Runtime error",
-        45: "Output limit",
-        50: "Time limit",
-        60: "Memory limit",
-        70: "Wrong answer",
-        80: "PresentationE",
-        90: "Accepted"
-    }
-
-    language_dict = {
-        1: "ANSI C",
-        2: "Java",
-        3: "C++",
-        4: "Pascal",
-        5: "C++11",
-        6: "Python"
-    }
 
     with Live(console=console, auto_refresh=False) as live:
         while True:
             table = Table(
-                "Submission ID", "Problem ID", "Verdict ID", "Runtime", "Submission Time", "Language",
-                "Rank", box=box.SIMPLE
+                "Submission ID", "Problem ID", "Verdict ID", "Runtime", "Submission Time", "Language", "Rank"
             )
             res = requests.get(f"{UHUNT_SUBS_USER_API_URL}/{uhunt_uid}/{sub_id}")
-            print(res.json())
             if len(res.json()["subs"]) == 0:
+                time.sleep(3)
                 continue
             s = res.json()["subs"][0]
 
             submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]))
+            verdict = helpers.verdict_dict[s[2]]
             table.add_row(
                 str(s[0]),
                 str(s[1]),
-                verdict_dict[s[2]],
+                verdict,
                 str(s[3]),
                 submission_time,
-                language_dict[s[5]],
+                helpers.language_dict[s[5]],
                 str(s[6])
             )
             live.update(table, refresh=True)
+
+            if verdict not in [0, 20]:
+
+                break
+
             time.sleep(3)
+    console.log('[bold green]All done')
 
 
 def get_pdf_file(problem_id):
