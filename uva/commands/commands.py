@@ -89,15 +89,29 @@ def login(username, password):
 
 def get_latest_subs(count):
     console = Console(log_time=False, log_path=False)
-    console.status("[blue]Logging into uva")
+    console.log("[blue]Logging into uva")
     cookie = localdb.read_cookies()
     if cookie is None:
         console.log(NOT_LOGGED_IN_MESSAGE)
         return
+    console.log('[blue]Getting latest subs')
     uhunt_uid = localdb.read_uhunt_uid()
     url = f'{UHUNT_SUBS_USER_LATEST_API_URL}/{uhunt_uid}/{count}'
     submissions = requests.get(url)
-    return submissions.content.decode("utf-8")
+    data = submissions.json()
+    console.log(f"[blue]Submissions for user {data['name']}")
+    if len(data["subs"]) != 0:
+        table = Table(
+            "Submission ID", "Problem ID", "Verdict ID", "Runtime", "Submission Time", "Language", "Rank"
+        )
+
+        for sub in reversed(data["subs"]):
+            table.add_row(*helpers.generate_submission_table_row(sub))
+
+        console.log(table)
+        console.log('[blue]All done')
+    else:
+        console.log("[blue]No submissions for the current user")
 
 
 def logout():

@@ -1,5 +1,4 @@
 import typer
-from rich import print
 from rich.prompt import Prompt
 
 import uva.commands as commands
@@ -68,7 +67,13 @@ def submit(
 
 
 @app.command()
-def latest_subs(count: int = 10):
+def latest_subs(count: int = typer.Argument(
+        10,
+        min=0,
+        max=100,
+        help='Number of submissions to get'
+    )
+):
     commands.get_latest_subs(count)
 
 
