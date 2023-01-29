@@ -3,7 +3,6 @@ import time
 
 import requests
 from bs4 import BeautifulSoup
-from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table

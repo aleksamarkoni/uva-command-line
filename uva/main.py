@@ -1,6 +1,5 @@
 import typer
 from rich import print
-from rich.console import Console
 from rich.prompt import Prompt
 
 import uva.commands as commands
@@ -60,10 +59,12 @@ def submit(
         language = helpers.detect_language(filepath)
 
     if language is None:
-        language = Prompt.ask("Please enter submit language", choices=['c', 'java', 'c++', 'pascal', 'c++11', 'python'])
+        ask_user = Prompt.ask("Please enter submit language", choices=['c', 'java', 'c++', 'pascal', 'c++11', 'python'])
+        language = helpers.SubmitLanguage(ask_user)
     elif language is helpers.SubmitLanguage.cplusplus:
-        language = Prompt.ask("Please enter c++ version", choices=['c++', 'c++11'], default='c++')
-    commands.submit(problem_id, filepath, language)
+        ask_user = Prompt.ask("Please enter c++ version", choices=['c++', 'c++11'], default='c++')
+        language = helpers.SubmitLanguage(ask_user)
+    commands.submit(problem_id, filepath, int(language))
 
 
 @app.command()
@@ -74,7 +75,12 @@ def latest_subs(count: int = 10):
 
 
 @app.command()
-def pdf(problem_id: int):
+def pdf(problem_id: int = typer.Argument(
+          ...,
+          show_default=False,
+          help="Uva problem id"
+        )
+):
     commands.get_pdf_file(str(problem_id))
 
 

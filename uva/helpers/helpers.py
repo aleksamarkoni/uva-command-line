@@ -10,6 +10,20 @@ class SubmitLanguage(str, Enum):
     cplusplus11 = 'c++11'
     python = 'python'
 
+    def __int__(self):
+        if self.value == 'c':
+            return 1
+        elif self.value == 'java':
+            return 2
+        elif self.value == 'c++':
+            return 3
+        elif self.value == 'pascal':
+            return 4
+        elif self.value == 'c++11':
+            return 5
+        else:
+            return 6
+
 
 verdict_dict = {
         0: "Processing",
