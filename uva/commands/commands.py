@@ -138,37 +138,40 @@ def submit(problem_id, filepath, language):
         console.log('There was an error')
 
 
-def wait_for_submission_results(submission_id, console):
+def wait_for_submission_results(submission_id, console=Console(log_time=False, log_path=False)):
     console.log("[bold green]Waiting for results, to exit ctrl + z")
     uhunt_uid = localdb.read_uhunt_uid()
     sub_id = str(int(submission_id) - 1)
 
     with Live(console=console, auto_refresh=False) as live:
         while True:
+            res = requests.get(f"{UHUNT_SUBS_USER_API_URL}/{uhunt_uid}/{sub_id}")
+
             table = Table(
                 "Submission ID", "Problem ID", "Verdict ID", "Runtime", "Submission Time", "Language", "Rank"
             )
-            res = requests.get(f"{UHUNT_SUBS_USER_API_URL}/{uhunt_uid}/{sub_id}")
-            if len(res.json()["subs"]) == 0:
-                time.sleep(3)
-                continue
-            s = res.json()["subs"][0]
 
-            submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]))
-            verdict = helpers.verdict_dict[s[2]]
-            table.add_row(
-                str(s[0]),
-                str(s[1]),
-                verdict,
-                str(s[3]),
-                submission_time,
-                helpers.language_dict[s[5]],
-                str(s[6])
-            )
+            verdict = None
+            # TODO this is not good, for some reason uhunt time is ahead for 15 mins.
+            if len(res.json()["subs"]) != 0:
+                s = res.json()["subs"][0]
+                submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta(minutes=15))
+                verdict = helpers.verdict_dict[s[2]]
+                table.add_row(
+                    str(s[0]),
+                    str(s[1]),
+                    verdict,
+                    str(s[3]),
+                    submission_time,
+                    helpers.language_dict[s[5]],
+                    str(s[6])
+                )
+            else:
+                table.add_row('?', '?', '?', '?', '?', '?', '?')
+
             live.update(table, refresh=True)
 
-            if verdict not in [0, 20]:
-
+            if verdict is not None and verdict not in [0, 20]:
                 break
 
             time.sleep(3)
@@ -177,8 +180,6 @@ def wait_for_submission_results(submission_id, console):
 
 def get_pdf_file(problem_id):
     url = f"{PDF_FILE_URL}/{problem_id[0:3]}/{problem_id}.pdf"
-    print(url)
     res = requests.get(url)
     with open(f'{problem_id}.pdf', 'wb') as f:
         f.write(res.content)
-

@@ -10,16 +10,16 @@ app = typer.Typer()
 
 @app.command()
 def login(
-    username: str = typer.Argument(
-        None,
-        show_default=False,
-        help="Your uva username"
-    ),
-    password: str = typer.Argument(
-        None,
-        show_default=False,
-        help="Your uva password"
-    )
+        username: str = typer.Argument(
+            None,
+            show_default=False,
+            help="Your uva username"
+        ),
+        password: str = typer.Argument(
+            None,
+            show_default=False,
+            help="Your uva password"
+        )
 ):
     """
         Logs you into the uva portal
@@ -40,9 +40,9 @@ def logout():
 @app.command()
 def submit(
         problem_id: int = typer.Argument(
-          ...,
-          show_default=False,
-          help="Uva problem id"
+            ...,
+            show_default=False,
+            help="Uva problem id"
         ),
         filepath: str = typer.Argument(
             ...,
@@ -69,17 +69,15 @@ def submit(
 
 @app.command()
 def latest_subs(count: int = 10):
-    subs = commands.get_latest_subs(count)
-    if subs:
-        print(subs)
+    commands.get_latest_subs(count)
 
 
 @app.command()
 def pdf(problem_id: int = typer.Argument(
-          ...,
-          show_default=False,
-          help="Uva problem id"
-        )
+    ...,
+    show_default=False,
+    help="Uva problem id"
+)
 ):
     commands.get_pdf_file(str(problem_id))
 
