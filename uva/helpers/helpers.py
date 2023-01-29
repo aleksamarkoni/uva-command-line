@@ -1,5 +1,8 @@
+import datetime
 from pathlib import Path
 from enum import Enum
+
+import timeago
 
 
 class SubmitLanguage(str, Enum):
@@ -62,3 +65,17 @@ extensions_language_map_dict = {
 def detect_language(filepath):
     extension = Path(filepath).suffix
     return extensions_language_map_dict.get(extension)
+
+
+def generate_submission_table_row(s):
+    submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta(minutes=15))
+    return [
+        str(s[0]),
+        str(s[1]),
+        verdict_dict[s[2]],
+        str(s[3]),
+        submission_time,
+        language_dict[s[5]],
+        str(s[6])
+    ]
+

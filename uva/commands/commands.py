@@ -155,17 +155,10 @@ def wait_for_submission_results(submission_id, console=Console(log_time=False, l
             # TODO this is not good, for some reason uhunt time is ahead for 15 mins.
             if len(res.json()["subs"]) != 0:
                 s = res.json()["subs"][0]
-                submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta(minutes=15))
-                verdict = helpers.verdict_dict[s[2]]
-                table.add_row(
-                    str(s[0]),
-                    str(s[1]),
-                    verdict,
-                    str(s[3]),
-                    submission_time,
-                    helpers.language_dict[s[5]],
-                    str(s[6])
-                )
+
+                row_data = helpers.generate_submission_table_row(s)
+                verdict = s[2]
+                table.add_row(*row_data)
             else:
                 table.add_row('?', '?', '?', '?', '?', '?', '?')
 
