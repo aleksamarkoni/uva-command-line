@@ -119,7 +119,7 @@ def submit(problem_id, filepath, language):
 
     files = {
         'localid': (None, problem_id),
-        'language': (None, language),
+        'language': (None, str(language)),
         'codeupl': (filepath, open(filepath, 'rb')),
     }
     console.log("Uploading solution to Uva")
