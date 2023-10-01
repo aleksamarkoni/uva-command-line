@@ -132,7 +132,7 @@ def submit(problem_id, filepath, language):
     session = requests.session()
     session.cookies.update(pickle.loads(cookie))
 
-    if not (os.path.exists(filepath) and os.path.getsize(my_path) > 0):
+    if not (os.path.exists(filepath) and os.path.getsize(filepath) > 0):
         console.log(SUBMIT_FILE_DOES_NOT_EXIST_OR_EMPTY)
         return
 
