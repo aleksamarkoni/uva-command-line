@@ -6,7 +6,6 @@ import uva.helpers as helpers
 
 app = typer.Typer()
 
-
 @app.command()
 def login(
         username: str = typer.Argument(
@@ -33,6 +32,9 @@ def login(
 
 @app.command()
 def logout():
+    """
+        Logs you out from uva portal
+    """
     commands.logout()
 
 
@@ -54,6 +56,9 @@ def submit(
             help="Submission language"
         )
 ):
+    """
+        Submits the problem to uva portal
+    """
     if language is None:
         language = helpers.detect_language(filepath)
 
@@ -63,7 +68,7 @@ def submit(
     elif language is helpers.SubmitLanguage.cplusplus:
         ask_user = Prompt.ask("Please enter c++ version", choices=['c++', 'c++11'], default='c++')
         language = helpers.SubmitLanguage(ask_user)
-    commands.submit(problem_id, filepath, int(language))
+    commands.submit(problem_id, filepath, language)
 
 
 @app.command()
@@ -74,18 +79,45 @@ def latest_subs(count: int = typer.Argument(
         help='Number of submissions to get'
     )
 ):
+    """
+        Prints latest subs
+    """
     commands.get_latest_subs(count)
 
 
 @app.command()
 def pdf(problem_id: int = typer.Argument(
-    ...,
-    show_default=False,
-    help="Uva problem id"
-)
+        ...,
+        show_default=False,
+        help="Uva problem id"
+    )
 ):
+    """
+        Downloads problem pdf
+    """
     commands.get_pdf_file(str(problem_id))
 
+
+@app.command()
+def start(
+    problem_id: int = typer.Argument(
+        ...,
+        show_default=False,
+        help="Uva problem id"
+    ),
+    language: helpers.SubmitLanguage = typer.Argument(
+        None,
+        show_default=False,
+        help="Submission language"
+    )
+):
+    """
+        Initialize directory to work on the problem
+    """
+    if language is None:
+        ask_user = Prompt.ask("Please enter submit language", choices=['c', 'java', 'c++', 'pascal', 'c++11', 'python'])
+        language = helpers.SubmitLanguage(ask_user)
+    commands.initialize_uva_dir(str(problem_id), int(language))
 
 # @app.command()
 # def test(subid: str):

@@ -67,6 +67,19 @@ def detect_language(filepath):
     return extensions_language_map_dict.get(extension)
 
 
+language_extensions_map_dict = {
+    SubmitLanguage.c: '.c',
+    SubmitLanguage.java: '.java',
+    SubmitLanguage.cplusplus: '.cpp',
+    SubmitLanguage.pascal: '.pas',
+    SubmitLanguage.python: '.py',
+}
+
+
+def get_file_extension(language):
+    return language_extensions_map_dict.get(language)
+
+
 def generate_submission_table_row(s):
     submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta())
     return [
@@ -78,4 +91,3 @@ def generate_submission_table_row(s):
         language_dict[s[5]],
         str(s[6])
     ]
-

@@ -7,8 +7,6 @@ from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
-import datetime
-import timeago
 
 import uva.localdb as localdb
 import uva.helpers as helpers
@@ -38,9 +36,10 @@ SUBMISSION_SUCESS_MESSAGE = 'mosmsg=Submission+received+with+ID+'
 NOT_LOGGED_IN_MESSAGE = "It's seems that you are not logged in, please login first."
 SUBMIT_FILE_DOES_NOT_EXIST_OR_EMPTY = "[bold #FF0000]File that you are tying to submit can't be found or it's empty"
 
+
 def login(username, password):
     console = Console(log_time=False, log_path=False)
-    with console.status("[blue]Logging into uva") as status:
+    with console.status("[blue]Logging into uva"):
         console.log("Fetching the login form")
         session = requests.Session()
         r = session.get(BASE_URL)
@@ -117,7 +116,7 @@ def get_latest_subs(count):
 
 def logout():
     console = Console(log_time=False, log_path=False)
-    with console.status("[blue]Logging out from uva") as status:
+    with console.status("[blue]Logging out from uva"):
         localdb.purge()
         console.log("[bold green]Logout success")
 
@@ -191,7 +190,31 @@ def wait_for_submission_results(submission_id, console=Console(log_time=False, l
 
 
 def get_pdf_file(problem_id):
+    # check if this is proper problem id, check if it's inside proper range of problems.
     url = f"{PDF_FILE_URL}/{problem_id[0:3]}/{problem_id}.pdf"
     res = requests.get(url)
     with open(f'{problem_id}.pdf', 'wb') as f:
         f.write(res.content)
+
+
+def initialize_uva_dir(problem_id, language):
+    console = Console(log_time=False, log_path=False)
+    console.log(f"[blue]Initializing dir for the problem {problem_id}")
+    url = f"{UHUNT_BASE_API_URL}/p/num/{problem_id}"
+    problem_data = requests.get(url)
+    data = problem_data.json()
+    dir_name = f"{problem_id} - {data['title']}"
+    console.log(f"[green]Creating directory {dir_name}")
+    if os.path.exists(dir_name):
+        console.log("[red]Directory already exists")
+        return
+    os.mkdir(dir_name)
+    file_extension = helpers.get_file_extension(language)
+    file_name = os.path.join(dir_name, f"main{file_extension}")
+    console.log(f"[green]Creating file {file_name}")
+    if os.path.exists(file_name):
+        console.log("[red]File already exists")
+        return
+    with open(file_name, 'w') as f:
+        f.close()
+    console.log(f"All ready to work on the solution for the problem {problem_id}")
