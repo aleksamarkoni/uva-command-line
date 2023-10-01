@@ -1,5 +1,6 @@
 import pickle
 import time
+import os
 
 import requests
 from bs4 import BeautifulSoup
@@ -35,7 +36,7 @@ NOT_AUTHORIEZED_ERROR_STRING = 'You are not authorised to view this resource'
 SUBMISSION_SUCESS_MESSAGE = 'mosmsg=Submission+received+with+ID+'
 
 NOT_LOGGED_IN_MESSAGE = "It's seems that you are not logged in, please login first."
-
+SUBMIT_FILE_DOES_NOT_EXIST_OR_EMPTY = "[bold #FF0000]File that you are tying to submit can't be found or it's empty"
 
 def login(username, password):
     console = Console(log_time=False, log_path=False)
@@ -118,7 +119,7 @@ def logout():
     console = Console(log_time=False, log_path=False)
     with console.status("[blue]Logging out from uva") as status:
         localdb.purge()
-        console.log("[bold green]All done")
+        console.log("[bold green]Logout success")
 
 
 def submit(problem_id, filepath, language):
@@ -130,6 +131,10 @@ def submit(problem_id, filepath, language):
         return
     session = requests.session()
     session.cookies.update(pickle.loads(cookie))
+
+    if not (os.path.exists(filepath) and os.path.getsize(my_path) > 0):
+        console.log(SUBMIT_FILE_DOES_NOT_EXIST_OR_EMPTY)
+        return
 
     files = {
         'localid': (None, problem_id),
@@ -149,7 +154,7 @@ def submit(problem_id, filepath, language):
         console.log(f"Submission with submission id {submission_id} submitted")
         wait_for_submission_results(submission_id, console)
     else:
-        console.log('There was an error')
+        console.log('[bold #FF0000]There was an unknow error')
 
 
 def wait_for_submission_results(submission_id, console=Console(log_time=False, log_path=False)):

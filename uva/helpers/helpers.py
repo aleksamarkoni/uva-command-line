@@ -68,7 +68,7 @@ def detect_language(filepath):
 
 
 def generate_submission_table_row(s):
-    submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta(minutes=15))
+    submission_time = timeago.format(datetime.datetime.fromtimestamp(s[4]) - datetime.timedelta())
     return [
         str(s[0]),
         str(s[1]),
